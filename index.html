@@ -161,6 +161,64 @@
   .view.active{ display:block; }
   @keyframes fadeIn{ from{opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
 
+  /* ── Campeón ── */
+  .campeon-cards{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+  }
+  .campeon-card{
+    background: var(--panel);
+    border: 1px solid var(--panel-borde);
+    border-radius: 10px;
+    padding: 1rem 0.9rem;
+    text-align: center;
+    transition: transform 0.15s;
+  }
+  .campeon-card:hover{ transform: translateY(-2px); }
+  .campeon-card.acierto{
+    border-color: var(--dorado);
+    background: linear-gradient(160deg, rgba(232,185,75,0.18), var(--panel) 70%);
+  }
+  .campeon-nombre{
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--texto-tenue);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+  .campeon-pick{
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--crema);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .campeon-pick.sin-pron{ color: var(--texto-tenue); font-size: 0.85rem; }
+  .campeon-pts{
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--dorado-bril);
+    margin-top: 0.4rem;
+  }
+  .campeon-real-banner{
+    background: linear-gradient(90deg, rgba(232,185,75,0.2), transparent);
+    border: 1px solid var(--dorado);
+    border-radius: 8px;
+    padding: 0.8rem 1.1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: var(--dorado-bril);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
   /* ── Section heading ── */
   .section-title{
     font-family: var(--font-display);
@@ -495,7 +553,9 @@
   <div class="tabs">
     <button class="tab active" data-view="tabla">🏆 Tabla</button>
     <button class="tab" data-view="partidos">⚽ Partidos</button>
-    <button class="tab" data-view="pronosticos">📋 Pronósticos</button>
+    <button class="tab" data-view="pronosticos">📋 Fase de Grupos</button>
+    <button class="tab" data-view="pronosticos16">🥊 16avos</button>
+    <button class="tab" data-view="campeon">🌟 Campeón</button>
   </div>
 
   <!-- ═══ VISTA: TABLA DE POSICIONES ═══ -->
@@ -513,9 +573,9 @@
     <div class="matches" id="matches"></div>
   </div>
 
-  <!-- ═══ VISTA: PRONÓSTICOS ═══ -->
+  <!-- ═══ VISTA: PRONÓSTICOS FASE DE GRUPOS ═══ -->
   <div class="view" id="view-pronosticos">
-    <div class="section-title">Tabla de pronósticos</div>
+    <div class="section-title">Pronósticos — Fase de Grupos</div>
     <div class="section-sub">Cada fila es un partido, cada columna una persona · resultado real arriba en dorado</div>
     <div class="pron-controls" id="pron-filters"></div>
     <div class="pron-table-wrap">
@@ -526,6 +586,27 @@
       <span><span class="swatch s1"></span>1 pt — solo resultado</span>
       <span><span class="swatch s0"></span>0 pts</span>
     </div>
+  </div>
+
+  <!-- ═══ VISTA: PRONÓSTICOS 16AVOS ═══ -->
+  <div class="view" id="view-pronosticos16">
+    <div class="section-title">Pronósticos — 16avos de Final</div>
+    <div class="section-sub">Cada fila es un partido, cada columna una persona · resultado real arriba en dorado</div>
+    <div class="pron-table-wrap">
+      <table class="pron-table" id="pron-table-16"></table>
+    </div>
+    <div class="pron-legend">
+      <span><span class="swatch s2"></span>2 pts — marcador exacto</span>
+      <span><span class="swatch s1"></span>1 pt — solo resultado</span>
+      <span><span class="swatch s0"></span>0 pts</span>
+    </div>
+  </div>
+
+  <!-- ═══ VISTA: CAMPEÓN ═══ -->
+  <div class="view" id="view-campeon">
+    <div class="section-title">Pronósticos de Campeón</div>
+    <div class="section-sub">El campeón real se conocerá al final del torneo · +10 puntos al que acierte</div>
+    <div id="campeon-grid"></div>
   </div>
 
 </div>
@@ -650,8 +731,8 @@ function renderLeaderboard(){
 let currentFilter = 'todos';
 
 function renderFilters(){
-  const jornadas = ['todos','J1','J2','J3'];
-  const labels = {todos:'Todos', J1:'Jornada 1', J2:'Jornada 2', J3:'Jornada 3'};
+  const jornadas = ['todos','J1','J2','J3','16avos'];
+  const labels = {todos:'Todos', J1:'Jornada 1', J2:'Jornada 2', J3:'Jornada 3', '16avos':'16avos de Final'};
   const html = jornadas.map(j=>{
     return `<button class="filter-btn ${j===currentFilter?'active':''}" data-filter="${j}">${labels[j]}</button>`;
   }).join('');
@@ -669,17 +750,18 @@ function renderFilters(){
 function renderMatches(){
   let partidos = DATA.partidos;
   if(currentFilter !== 'todos'){
-    partidos = partidos.filter(p=>p.fecha.startsWith(currentFilter));
+    partidos = partidos.filter(p=>p.grp === currentFilter || p.fecha.startsWith(currentFilter));
   }
 
   const html = partidos.map(p=>{
     const jornada = p.fecha.split(' · ')[0];
     const fecha = p.fecha.split(' · ')[1];
     const jugado = !!p.real;
+    const grpLabel = p.grp === '16avos' ? '16AVOS DE FINAL' : `GRUPO ${p.grp}`;
     return `
       <div class="match-card ${jugado?'played':''}">
         <div class="match-meta">
-          <span class="grp">GRUPO ${p.grp}</span><br>
+          <span class="grp">${grpLabel}</span><br>
           ${jornada} · ${fecha}
         </div>
         <div class="match-teams">${p.eq1} <span style="color:var(--texto-tenue)">vs</span> ${p.eq2}</div>
@@ -712,29 +794,22 @@ function renderPronFilters(){
   });
 }
 
-function renderPronTable(){
-  let partidos = DATA.partidos.map((p,i)=>({...p, idx:i}));
-  if(pronFilter !== 'todos'){
-    partidos = partidos.filter(p=>p.fecha.startsWith(pronFilter));
-  }
-
-  // Encabezado: nombres
+function buildPronTable(partidos, tableId){
   const headRow1 = `<tr>
     <th class="match-col">Partido</th>
     ${DATA.participantes.map(p=>`<th>${p.nombre}</th>`).join('')}
   </tr>`;
 
-  // Cuerpo: una fila por partido
   const bodyRows = partidos.map(p=>{
     const jornada = p.fecha.split(' · ')[0];
     const fecha = p.fecha.split(' · ')[1];
     const realCell = p.real
       ? `<div style="font-family:var(--font-mono); font-weight:700; color:var(--dorado-bril); font-size:0.7rem; margin-top:0.15rem;">Real: ${p.real}</div>`
       : `<div style="font-family:var(--font-mono); color:var(--texto-tenue); font-size:0.65rem; margin-top:0.15rem;">Por jugar</div>`;
-
+    const grpLabel = p.grp === '16avos' ? '16avos' : p.grp;
     const matchCell = `
       <td class="match-col">
-        <span class="pron-match-grp">${p.grp}</span>
+        <span class="pron-match-grp">${grpLabel}</span>
         <span class="pron-match-label">${p.eq1} vs ${p.eq2}</span>
         <div style="font-size:0.6rem; color:var(--texto-tenue); margin-top:0.1rem;">${jornada} · ${fecha}</div>
         ${realCell}
@@ -752,10 +827,43 @@ function renderPronTable(){
     return `<tr>${matchCell}${cells}</tr>`;
   }).join('');
 
-  document.getElementById('pron-table').innerHTML = `
+  document.getElementById(tableId).innerHTML = `
     <thead>${headRow1}</thead>
     <tbody>${bodyRows}</tbody>
   `;
+}
+
+function renderPronTable(){
+  let partidos = DATA.partidos.map((p,i)=>({...p, idx:i})).filter(p=>p.grp !== '16avos');
+  if(pronFilter !== 'todos'){
+    partidos = partidos.filter(p=>p.fecha.startsWith(pronFilter));
+  }
+  buildPronTable(partidos, 'pron-table');
+}
+
+function renderPron16Table(){
+  const partidos = DATA.partidos.map((p,i)=>({...p, idx:i})).filter(p=>p.grp === '16avos');
+  buildPronTable(partidos, 'pron-table-16');
+}
+
+function renderCampeonTable(){
+  const campeonReal = DATA.campeonReal;
+  const bannerHtml = campeonReal
+    ? `<div class="campeon-real-banner">🏆 Campeón real: <strong>${campeonReal}</strong></div>`
+    : `<div class="campeon-real-banner" style="color:var(--texto-tenue); border-color:var(--panel-borde);">⏳ Campeón por definirse al finalizar el torneo</div>`;
+
+  const cards = DATA.participantes.map(p=>{
+    const acierto = campeonReal && p.campeon && p.campeon === campeonReal;
+    return `
+      <div class="campeon-card ${acierto ? 'acierto' : ''}">
+        <div class="campeon-nombre">${p.nombre}</div>
+        <div class="campeon-pick ${p.campeon ? '' : 'sin-pron'}">${p.campeon ? p.campeon : '—'}</div>
+        ${acierto ? `<div class="campeon-pts">+10 pts 🎉</div>` : ''}
+      </div>`;
+  }).join('');
+
+  document.getElementById('campeon-grid').innerHTML =
+    bannerHtml + `<div class="campeon-cards">${cards}</div>`;
 }
 
 // ───────────────────────────────────────────
@@ -778,6 +886,8 @@ renderFilters();
 renderMatches();
 renderPronFilters();
 renderPronTable();
+renderPron16Table();
+renderCampeonTable();
 </script>
 
 </body>
