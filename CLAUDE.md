@@ -12,7 +12,7 @@ Cada vez que se actualiza información (resultados reales, nuevos participantes,
 - **2 puntos**: el marcador pronosticado coincide exactamente con el resultado real (ej. pronóstico "2-1", real "2-1").
 - **1 punto**: el pronóstico acierta el resultado (quién gana o empate) pero no el marcador exacto.
 - **0 puntos**: el pronóstico falla tanto el resultado como el marcador.
-- **+10 puntos extra**: si el pronóstico del campeón del torneo coincide con el campeón real (solo se otorga al finalizar el Mundial).
+- **+5 puntos extra**: si el pronóstico del campeón del torneo coincide con el campeón real (solo se otorga al finalizar el Mundial).
 - El resultado (G1/Empate/G2) se deriva siempre del marcador, comparando los dos números separados por "-". Nunca se pide el resultado por separado.
 
 ## Formato de datos
@@ -25,7 +25,7 @@ Cada vez que se actualiza información (resultados reales, nuevos participantes,
 - **Hoja 📝 Respuestas del Form**: una fila por participante, columnas = Marca temporal, Nombre, 72 marcadores (uno por partido, en orden cronológico J1→J2→J3), y la pregunta del campeón al final.
 - **Hoja 📊 Resultados**: una fila por partido (72 filas), con grupo, fecha, equipo 1, equipo 2, y el marcador real (se llena conforme se juegan los partidos).
 - **Hoja 🏆 Puntos**: fórmulas automáticas que comparan pronóstico vs resultado real y calculan los puntos por partido y el total por participante. No se edita a mano.
-- **Hoja 🌟 Campeón**: pronóstico del campeón por participante + campeón real (celda D3) + cálculo de los 10 puntos extra.
+- **Hoja 🌟 Campeón**: pronóstico del campeón por participante + campeón real (celda D3) + cálculo de los 5 puntos extra.
 - **Hoja 📈 Posiciones**: ranking final, suma de puntos de partidos + campeón.
 - Al agregar un nuevo participante: agregar su fila en "Respuestas del Form" y extender las fórmulas correspondientes en "Puntos", "Campeón" y "Posiciones" (copiando el patrón de fórmulas de las filas existentes, ajustando las referencias de fila).
 - Después de cualquier cambio en el Excel, ejecutar el recalculo de fórmulas con el script de la skill de xlsx y verificar 0 errores antes de entregar el archivo.
